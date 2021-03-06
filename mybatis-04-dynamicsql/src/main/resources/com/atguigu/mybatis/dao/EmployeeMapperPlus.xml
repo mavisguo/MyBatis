@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.mybatis.dao.EmployeeMapperPlus">
+    <resultMap id="MySimEmp" type="com.atguigu.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+    </resultMap>
+    <select id="getEmpById" resultMap="MySimEmp">
+        select *
+        from tbl_employee
+        where id = #{id}
+    </select>
+
+    <resultMap id="MyDifEmp" type="com.atguigu.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="gender" property="gender"/>
+        <result column="email" property="email"/>
+        <result column="did" property="dept.id"/>
+        <result column="dept_name" property="dept.departmentName"/>
+    </resultMap>
+    <resultMap id="MyDifEmp2" type="com.atguigu.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="gender" property="gender"/>
+        <result column="email" property="email"/>
+        <association property="dept" javaType="com.atguigu.mybatis.bean.Department">
+            <id column="did" property="id"/>
+            <result column="dept_name" property="departmentName"/>
+        </association>
+    </resultMap>
+    <select id="getEmpAndDept" resultMap="MyDifEmp2">
+        select e.id id, e.last_name last_name, e.gender gender, e.email email, e.d_id d_id, d.id did, d.dept_name dept_name
+        from tbl_employee e,
+             tbl_dept d
+        where e.d_id = d.id
+          and e.id = #{id}
+    </select>
+
+    <resultMap id="MyEmpByStep" type="com.atguigu.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="gender" property="gender"/>
+        <result column="email" property="email"/>
+        <association property="dept" select="com.atguigu.mybatis.dao.DepartmentMapper.getDeptById" column="d_id"/>
+    </resultMap>
+    <select id="getEmpByIdStep" resultMap="MyEmpByStep">
+        select *
+        from tbl_employee
+        where id = #{id}
+    </select>
+
+    <select id="getEmpsByDeptId" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from tbl_employee
+        where d_id = #{deptId}
+    </select>
+
+    <resultMap id="MyEmpDis" type="com.atguigu.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <discriminator column="gender" javaType="string">
+            <case value="0" resultType="com.atguigu.mybatis.bean.Employee">
+                <association property="dept" select="com.atguigu.mybatis.dao.DepartmentMapper.getDeptById" column="d_id"/>
+            </case>
+            <case value="1" resultType="com.atguigu.mybatis.bean.Employee">
+                <id column="id" property="id"/>
+                <result column="last_name" property="lastName"/>
+                <result column="last_name" property="email"/>
+                <result column="gender" property="gender"/>
+            </case>
+        </discriminator>
+    </resultMap>
+</mapper>

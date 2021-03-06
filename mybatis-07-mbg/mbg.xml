@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <!--targetRuntime="MyBatis3Simple"：生成简单版的CRUD；targetRuntime="MyBatis3"：生成豪华版的CRUD-->
+    <context id="DB2Tables" targetRuntime="MyBatis3">
+        <!--配置数据库-->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver" connectionURL="jdbc:mysql:///mybatis?useSSL=false&amp;serverTimezone=GMT%2B8&amp;allowMultiQueries=true" userId="root" password="root"/>
+
+        <!--是否将Number强制转换成BigDecimal-->
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+        <!--javaModelGenerator：指定JavaBean的生成策略-->
+        <!--targetPackage：指定目标包名-->
+        <!--targetProject：指定目标工程-->
+        <javaModelGenerator targetPackage="com.atguigu.mybatis.bean" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!--sqlMapGenerator：SQL映射文件生成策略-->
+        <sqlMapGenerator targetPackage="com.atguigu.mybatis.dao" targetProject=".\src\main\resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!--javaClientGenerator：指定Mapper接口所在的位置-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.atguigu.mybatis.dao" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!--指定要根据哪些表创建JavaBean-->
+        <table tableName="tbl_dept" domainObjectName="Department"/>
+        <table tableName="tbl_employee" domainObjectName="Employee"/>
+    </context>
+</generatorConfiguration>

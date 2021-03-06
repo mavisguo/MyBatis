@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.mybatis.dao.EmployeeMapperDynamicSQL">
+    <!--where：封装筛选条件-->
+    <!--if：判断-->
+    <!--trim：字符串截取和拼接-->
+    <!--choose-when/otherwise：分支选择-->
+    <!--set：封装修改条件-->
+    <!--foreach：遍历集合-->
+    <!--public List<Employee> getEmpsByConditionIf(Employee employee);-->
+    <select id="getEmpsByConditionIf" resultType="com.atguigu.mybatis.bean.Employee">
+        select * from tbl_employee
+        <where>
+            <!--test：判断表达式，采用OGNL，从方法参数中取值进行判断-->
+            <if test="id!=null">
+                id = #{id}
+            </if>
+            <!--遇见特殊符号应该写成转义字符，&&属于特殊字符，转义为&amp;&amp;-->
+            <if test="lastName!=null &amp;&amp; lastName!=&quot;&quot;">
+                and last_name like #{lastName}
+            </if>
+            <if test="email!=null and email.trim()!=&quot;&quot;">
+                and email = #{email}
+            </if>
+            <!--OGNL会进行字符串与数字的转换判断，"0"==0-->
+            <if test="gender==0 or gender==1">
+                and gender = #{gender}
+            </if>
+        </where>
+    </select>
+
+    <!--public List<Employee> getEmpsByConditionTrim(Employee employee);-->
+    <select id="getEmpsByConditionTrim" resultType="com.atguigu.mybatis.bean.Employee">
+        select * from tbl_employee
+        <!--where标签不能解决后面多出的and或or-->
+        <!--trim标签体中是整个字符串截取和拼接后的结果-->
+        <!--prefix：前缀，给拼串后的整个字符串加一个前缀-->
+        <!--prefixOverrides：前缀覆盖，去掉整个字符串前面多余的字符-->
+        <!--suffix：后缀，给拼串后的整个字符串加一个后缀-->
+        <!--suffixOverrides：后缀覆盖，去掉整个字符串后面多余的字符-->
+        <trim prefix="where" suffixOverrides="and">
+            <if test="id!=null">
+                id = #{id} and
+            </if>
+            <if test="lastName!=null &amp;&amp; lastName!=&quot;&quot;">
+                last_name like #{lastName} and
+            </if>
+            <if test="email!=null and email.trim()!=&quot;&quot;">
+                email = #{email} and
+            </if>
+            <if test="gender==0 or gender==1">
+                gender = #{gender}
+            </if>
+        </trim>
+    </select>
+
+    <!--public List<Employee> getEmpsByConditionChoose(Employee employee);-->
+    <select id="getEmpsByConditionChoose" resultType="com.atguigu.mybatis.bean.Employee">
+        select * from tbl_employee
+        <where>
+            <!--如果带了id就用id查，如果带了lastName就用lastName查，只会进入其中一个-->
+            <choose>
+                <when test="id!=null">
+                    id = #{id}
+                </when>
+                <when test="lastName!=null">
+                    last_name like #{lastName}
+                </when>
+                <when test="email!=null">
+                    email = #{email}
+                </when>
+                <otherwise>
+                    gender = 0
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!--public void updateEmp(Employee employee);-->
+    <update id="updateEmp">
+        update tbl_employee
+        <set>
+            <if test="lastName!=null">
+                last_name = #{lastName},
+            </if>
+            <if test="email!=null">
+                email = #{email},
+            </if>
+            <if test="gender!=null">
+                gender = #{gender}
+            </if>
+        </set>
+        where id = #{id}
+        <!--利用trim标签-->
+        <!--update tbl_employee
+        <trim prefix="set" suffixOverrides=",">
+            <if test="lastName!=null">
+                last_name = #{lastName},
+            </if>
+            <if test="email!=null">
+                email = #{email},
+            </if>
+            <if test="gender!=null">
+                gender = #{gender}
+            </if>
+        </trim>
+        where id = #{id}-->
+    </update>
+
+    <!--public List<Employee> getEmpsByConditionForeach(List<Integer> ids);-->
+    <select id="getEmpsByConditionForeach" resultType="com.atguigu.mybatis.bean.Employee">
+        select * from tbl_employee
+        where id in
+        <!--collection：指定要遍历的集合；List类型的参数会特殊处理封装在Map中，Map的key就叫list-->
+        <!--item：将当前遍历出的元素赋值给指定的变量-->
+        <!--separator：每个元素之间的分隔符-->
+        <!--open：遍历出所有结果拼接一个开始的字符-->
+        <!--close：遍历出所有结果拼接一个结束的字符-->
+        <!--index：遍历List的时候index就是索引，item就是当前值；遍历Map的时候index表示的是Map的key，item是Map的value-->
+        <!--#{变量名}就能取出变量的值也就是当前遍历出的元素-->
+        <foreach collection="ids" item="item_id" separator="," open="(" close=")">
+            #{item_id}
+        </foreach>
+    </select>
+
+    <!--批量插入-->
+    <!--public void addEmps(@Param("emps") List<Employee> emps);-->
+    <!--MySQL批量插入：可以foreach遍历；MySQL支持values(),(),()语法-->
+    <insert id="addEmps">
+        insert into tbl_employee
+        <include refid="insertColumn"/>
+        values
+        <foreach collection="emps" item="emp" separator=",">
+            (#{emp.lastName}, #{emp.email}, #{emp.gender}, #{emp.dept.id})
+        </foreach>
+    </insert>
+    <!--这种方式需要数据库连接属性allowMultiQueries=true，这种分号分隔多个SQL可以用于其他的批量操作（删除、修改）-->
+    <!--<insert id="addEmps">
+        <foreach collection="emps" item="emp" separator=";">
+            insert into tbl_employee (last_name, email, gender, d_id)
+            values (#{emp.lastName}, #{emp.email}, #{emp.gender}, #{emp.dept.id})
+        </foreach>
+    </insert>-->
+
+    <!--Oracle批量插入：Oracle不支持values(),(),()语法-->
+    <!--
+        Oracle支持批量插入的方式：
+        1.多个insert放在begin-end里面：
+            begin
+                insert into employees (employee_id, last_name, email)
+                values (employees_seq.nextval, 'test_001', 'test_001@atguigu.com');
+                insert into employees (employee_id, last_name, email)
+                values (employees_seq.nextval, 'test_002', 'test_002@atguigu.com');
+            end;
+        2.利用中间表：
+            insert into employees (employee_id, last_name, email)
+                select employees_seq.nextval, lastName, email
+                from
+                (
+                    select 'test_a_01' lastName, 'test_a_e01' email from dual
+                    union
+                    select 'test_a_02' lastName, 'test_a_e02' email from dual
+                    union
+                    select 'test_a_03' lastName, 'test_a_e03' email from dual
+                )
+    -->
+    <insert id="addEmps" databaseId="oracle">
+        <!--Oracle第一种批量插入方式-->
+        <!--<foreach collection="emps" item="emp" open="begin" close="end;">
+            insert into employees (employee_id, last_name, email)
+            values (employees_seq.nextval, #{emp.lastName}, #{emp.email});
+        </foreach>-->
+        <!--Oracle第二种批量插入方式-->
+        insert into employees
+        <!--include：可以用来引用外部抽取的SQL片段-->
+        <include refid="insertColumn">
+            <!--include标签还可以自定义一些property属性，sql标签内部就能使用自定义的property属性；property属性取值的正确方式${prop}，不能用#{prop}-->
+            <!--<property name="testColumn" value="abc"/>-->
+        </include>
+        select employees_seq.nextval, lastName, email
+        from
+        <foreach collection="emps" item="emp" separator="union" open="(" close=")">
+            select #{emp.lastName} lastName, #{emp.email} email from dual
+        </foreach>
+    </insert>
+
+    <!--不只是方法传递过来的参数可以被用来判断和取值，MyBatis的默认内置参数也可以-->
+    <!--
+        MyBatis默认还有两个内置参数：
+        _parameter：代表整个参数；单个参数：_parameter就是这个参数；多个参数：参数会被封装为一个Map，_parameter就代表这个Map；
+        _databaseId：如果配置了databaseIdProvider标签，_databaseId就是代表当前数据库的别名。
+    -->
+    <!--public List<Employee> getEmpsTestInnerParameter(Employee employee);-->
+    <select id="getEmpsTestInnerParameter" resultType="com.atguigu.mybatis.bean.Employee">
+        <!--bind：可以将OGNL表达式的值绑定到一个变量中，方便后来引用这个变量的值-->
+        <!--<bind name="_lastName" value="'%'+lastName+'%'"/>-->
+        <if test="_databaseId=='mysql'">
+            select * from tbl_employee
+            <if test="_parameter!=null">
+                where last_name like #{lastName}
+            </if>
+        </if>
+        <if test="_databaseId=='oracle'">
+            select * from employees
+            <if test="_parameter!=null">
+                where last_name like #{_parameter.lastName}
+            </if>
+        </if>
+    </select>
+
+    <!--sql：抽取可重用的SQL片段，比如经常查询或插入要用的列名，抽取出来方便引用-->
+    <sql id="insertColumn">
+        <if test="_databaseId=='oracle'">
+            (employee_id, last_name, email)
+        </if>
+        <if test="_databaseId=='mysql'">
+            (last_name, email, gender, d_id)
+        </if>
+    </sql>
+</mapper>

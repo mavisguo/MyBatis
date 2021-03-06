@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.mybatis.dao.EmployeeMapper">
+    <!--
+        eviction：缓存的回收策略，默认值是LRU。
+        LRU：最近最少使用的，移除最长时间不被使用的对象；
+        FIFO：先进先出，按对象进入缓存的顺序来移除它们；
+        SOFT：软引用，移除基于垃圾回收器状态和软引用规则的对象；
+        WEAK：弱引用，更积极地移除基于垃圾收集器状态和弱引用规则的对象。
+    -->
+    <!--flushInterval：缓存清空时间间隔，单位是毫秒，默认不清空-->
+    <!--
+        readOnly：是否只读。
+        true：MyBatis认为所有从缓存中获取数据的操作都是只读操作，不会修改数据，为了加快获取速度，直接就会将数据在缓存中的引用交给用户；不安全，速度快。
+        false：MyBatis觉得获取的数据可能会被修改，会利用序列化和反序列的技术克隆一份新的数据交给用户；安全，速度慢。
+    -->
+    <!--size：缓存存放多少元素-->
+    <!--<cache eviction="FIFO" flushInterval="60000" readOnly="false" size="1024"/>-->
+
+    <!--type：指定自定义缓存的全类名，实现Cache接口即可-->
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+
+    <select id="getEmpByLastNameLikeReturnMap" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from tbl_employee
+        where last_name like #{lastName}
+    </select>
+
+    <select id="getEmpByIdReturnMap" resultType="map">
+        select *
+        from tbl_employee
+        where id = #{id}
+    </select>
+
+    <select id="getEmpsByLastNameLike" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from tbl_employee
+        where last_name like #{lastName}
+    </select>
+
+    <select id="getEmpByMap" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from ${tableName}
+        where id = #{id}
+          and last_name = #{lastName}
+    </select>
+
+    <select id="getEmpByIdAndLastName" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from tbl_employee
+        where id = #{id}
+          and last_name = #{lastName}
+    </select>
+
+    <select id="getEmpById" resultType="com.atguigu.mybatis.bean.Employee">
+        select *
+        from tbl_employee
+        where id = #{id}
+    </select>
+
+    <select id="getEmpById" resultType="com.atguigu.mybatis.bean.Employee" databaseId="mysql">
+        select *
+        from tbl_employee
+        where id = #{id}
+    </select>
+
+    <select id="getEmpById" resultType="com.atguigu.mybatis.bean.Employee" databaseId="oracle">
+        select employee_id id, last_name lastName, email
+        from employees
+        where employee_id = #{id}
+    </select>
+
+    <insert id="addEmp" parameterType="com.atguigu.mybatis.bean.Employee" useGeneratedKeys="true" keyProperty="id" databaseId="mysql" flushCache="false">
+        insert into tbl_employee (last_name, email, gender)
+        values (#{lastName}, #{email}, #{gender})
+    </insert>
+
+    <insert id="addEmp" databaseId="oracle">
+        <selectKey keyProperty="id" order="BEFORE" resultType="Integer">
+            select employees_seq.nextval from dual
+        </selectKey>
+        insert into employees (employee_id, last_name, email) values (#{id}, #{lastName}, #{email})
+    </insert>
+
+    <update id="updateEmp">
+        update tbl_employee
+        set last_name = #{lastName},
+            email     = #{email},
+            gender    = #{gender}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteEmpById">
+        delete
+        from tbl_employee
+        where id = #{id}
+    </delete>
+</mapper>
